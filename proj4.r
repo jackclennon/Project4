@@ -22,7 +22,7 @@ hessian<-function(theta,func,eps){
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6){
   g <- grad(theta)
   if (hess==NULL){
-    hess<-hessian(theta,func,eps)
+    hess<-hessian(g,func,eps)
   }
   while (length(g[g <= tol]) > 0) {
     #Need to find a way to get rid of the solve
