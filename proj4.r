@@ -31,3 +31,11 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   }
   theta
 }
+
+#####IDEA FOR STEP HALVING:
+step size is given by the triangle on page 66
+while (func(theta + stepsize) => func(theta))
+stepsize<-stepsize/2
+if we go through max.half iterations in this while loop
+give up and print some error
+
