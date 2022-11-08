@@ -26,17 +26,17 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
   while (length(g[g > tol]) > 0) {
     #check if the hessian is positive definite. If it isn't, the we perturb it
     
-    if (inherits(try(chol(hess), silent=TRUE), "try-error")) {
+    if (inherits(try(chol(hess), silent=TRUE), "try-error")==TRUE) {
       #perturb the hessian if it isn't positive definite
       
       #check that this value for the dk works
-      dk <- eps/sqrt(eps)
-      H <- hess(theta) + diag(length(theta))*dk
+      #dk <- 1.5
+      H <- hess(theta) + matrix(1,length(theta),length(theta))*3
     } else {
       H <- hess(theta)
     }
     
-    if (inherits(try(chol(H), silent=TRUE), "try-error")) {
+    if (inherits(try(chol(H), silent=TRUE), "try-error")==TRUE) {
       print("HERE")
     }
     
@@ -89,3 +89,6 @@ dummy_grad<-function(theta){
 dummy_hess<-function(theta){
   return(hessian_csd(dummy,theta))
 }
+
+
+newt(c(4,1),dummy,dummy_grad,dummy_hess)
