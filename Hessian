@@ -1,0 +1,26 @@
+hessian<-function(theta,func,eps=1e-6){
+  n<-length(theta)
+  hess<-matrix(nrow=n,ncol=n)
+  for (i in 1:n){
+    for (j in 1:n){
+      e_i=rep(0,n)
+      e_i[i]=1
+      e_j=rep(0,n)
+      e_j[j]=1
+      plus_plus<-func(theta+eps*e_i + eps*e_j)
+      plus_minus<-func(theta+eps*e_i - eps*e_j)
+      minus_plus<-func(theta-eps*e_i + eps*e_j)
+      minus_minus<-func(theta-eps*e_i - eps*e_j)
+      finitedifferencing<-(plus_plus-plus_minus-minus_plus+minus_minus)/(4*eps^2)
+      hess[i,j]<-finitedifferencing
+      
+    }
+  }
+  return(hess)
+}
+
+test<-function(x){
+  return(x[1]^2 + x[2]^2 + x[1]*x[2] + x[3] + x[1]*x[2]*x[3])
+}
+
+hessian(c(1,1,1),test)
