@@ -23,7 +23,6 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
     hess<-function(theta){hessian1(theta,grad,eps)}
   }
   
-  
   while (length(g[g > tol]) > 0) {
     #check if the hessian is positive definite. If it isn't, the we perturb it
     
@@ -35,6 +34,10 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
       H <- hess(theta) + diag(length(theta))*dk
     } else {
       H <- hess(theta)
+    }
+    
+    if (inherits(try(chol(H), silent=TRUE), "try-error")) {
+      print("HERE")
     }
     
     #Need to find a way to get rid of the solve
@@ -53,7 +56,7 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
     }
     
     theta <- theta - delta
-    print(theta)
+    print(c(theta, func(theta)))
     
     g <- grad(theta)
   }
