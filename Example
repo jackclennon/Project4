@@ -19,7 +19,9 @@ hessian1 <- function(theta, grad, eps) {
 
 newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscale=1,maxit=100,max.half=20){
   g <- grad(theta)
+  counter2<-0
   while (length(g[g > tol]) > 0) {
+    counter2<-counter2+1
     #check if the hessian is positive definite. If it isn't, the we perturb it
     multiple<-1
     H<-hess(theta)
@@ -35,8 +37,10 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
     #we need to check that the function's value is actually being minimised
     counter <- 0
     while(func(theta + delta) <= func(theta)) {
+      counter<-counter+1
+      print(counter)
       if (counter >= max.half) {
-        #error goes here
+        print("error msg here lol")
         break
       }
       delta <- delta/2
@@ -44,10 +48,12 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
     }
     
     theta <- theta - delta
-    #print(c(theta, func(theta)))
+    print((theta))
+    print(counter2)
     
     g <- grad(theta)
   }
+  
   theta
 }
 
@@ -79,4 +85,4 @@ dummy_hess<-function(theta){
 }
 
 
-newt(c(4,1),dummy,dummy_grad,dummy_hess)
+newt(c(61,1),dummy,dummy_grad,dummy_hess)
