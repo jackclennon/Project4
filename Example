@@ -19,27 +19,15 @@ hessian1 <- function(theta, grad, eps) {
 
 newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscale=1,maxit=100,max.half=20){
   g <- grad(theta)
-  if (is.null(hess)){
-    hess<-function(theta){hessian1(theta,grad,eps)}
-  }
-  
   while (length(g[g > tol]) > 0) {
     #check if the hessian is positive definite. If it isn't, the we perturb it
-    
-    if (inherits(try(chol(hess), silent=TRUE), "try-error")==TRUE) {
+    multiple<-1
+    H<-hess(theta)
+    while (inherits(try(chol(H), silent=TRUE), "try-error")==TRUE) {
       #perturb the hessian if it isn't positive definite
-      
-      #check that this value for the dk works
-      #dk <- 1.5
-      H <- hess(theta) + matrix(1,length(theta),length(theta))*3
-    } else {
-      H <- hess(theta)
+      H<-H + matrix(1,length(theta),length(theta))*multiple
+      multiple<-multiple+1
     }
-    
-    if (inherits(try(chol(H), silent=TRUE), "try-error")==TRUE) {
-      print("HERE")
-    }
-    
     #Need to find a way to get rid of the solve
     delta <- solve(H) %*% grad(theta)
     
@@ -56,7 +44,7 @@ newt <- function(theta,func,grad,hess,...,tol=1e-8,max.half=20,eps=1e-6) {#fscal
     }
     
     theta <- theta - delta
-    print(c(theta, func(theta)))
+    #print(c(theta, func(theta)))
     
     g <- grad(theta)
   }
