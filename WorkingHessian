@@ -23,7 +23,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#
     hess<-function(theta){hessian1(theta,grad,eps)}
   }
   counter2<-0
-  while (length(g[g > tol]) > 0) {
+  while (length(g[abs(g) > tol]) > 0) {
     counter2<-counter2+1
     #check if the hessian is positive definite. If it isn't, the we perturb it
     multiple<-1
@@ -89,7 +89,19 @@ dummy_grad<-function(theta){
 dummy_hess<-function(theta){
   return(hessian_csd(dummy,theta))
 }
-
-diff <- function(theta) {newt(theta, rb, gb)-newt(theta, rb, gb, hb)}
-d <- diff(theta)
-print(d)
+t80 <- 1:13 ## years since 1980
+y1 <- c(12,14,33,50,67,74,123,141,165,204,253,246,240) ## AIDS cases
+nll <- function(theta) {
+  ## -ve log likelihood for AIDS model y_i ~ Poi(alpha*exp(beta*t_i))
+  ## theta = (alpha,beta)
+  mu <- theta[1] * exp(theta[2] * t80) ## mu = E(y)
+  -sum(dpois(y1,mu,log=TRUE)) ## the negative log likelihood
+} ## nll
+gll <- function(theta) {
+  ## grad of -ve log lik of Poisson AIDS early epidemic model
+  alpha <- theta[1];beta <- theta[2] ## enhances readability
+  ebt <- exp(beta*t80) ## avoid computing twice
+  -c(sum(y1)/alpha - sum(ebt), ## -dl/dalpha
+     sum(y1*t80) - alpha*sum(t80*ebt)) ## -dl/dbeta
+} ## gll
+newt(c(10,.1),nll,gll)
