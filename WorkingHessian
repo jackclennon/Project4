@@ -30,11 +30,10 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#
     H<-hess(theta,...)
     
     while (inherits(try(chol(H), silent=TRUE), "try-error")) {
-      print("Not positive definite")
-      print(H)
       #perturb the hessian if it isn't positive definite
+      print('converting non-pos to pos')
       H <- H + matrix(1,length(theta),length(theta))*multiple
-      multiple<-multiple+1
+      multiple<-multiple+10
     }
     #Need to find a way to get rid of the solve
     delta <- -(solve(H) %*% grad(theta,...))
@@ -42,21 +41,16 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#
     #step-halving
     #we need to check that the function's value is actually being minimised
     counter <- 0
-    while(func(theta + delta,...) >= func(theta,...)) {
-      counter<-counter+1
+    while(func(theta + delta,...) > func(theta,...)) {
       print(counter)
       if (counter >= max.half) {
         print("error msg here lol")
-        break
       }
       delta <- delta/2
       counter <- counter + 1
     }
     
     theta <- theta + delta
-    print((theta))
-    print(counter2)
-    
     g <- grad(theta,...)
   }
   
@@ -116,4 +110,4 @@ gll <- function(theta) {
      sum(y1*t80) - alpha*sum(t80*ebt)) ## -dl/dbeta
 } ## gll
 
-newt(c(4,1),dummy,dummy_grad)
+newt(c(10,.1),nll,gll)
