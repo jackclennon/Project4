@@ -1,4 +1,4 @@
-hessian1 <- function(theta, grad, eps) {
+hessian1 <- function(theta, grad, eps,...) {
   g<-grad
   n<-length(theta)
   hess<-matrix(nrow=n,ncol=n)
@@ -11,7 +11,7 @@ hessian1 <- function(theta, grad, eps) {
       e_i[i]=1
       e_j=rep(0,n)
       e_j[j]=1
-      hess[i, j] = ((g(theta + eps*e_j)[i] - g(theta-eps*e_j)[i])/(4*eps) +  ((g(theta+eps*e_i)[j] - g(theta-eps*e_i)[j])/(4*eps)))
+      hess[i, j] = ((g(theta + eps*e_j,...)[i] - g(theta-eps*e_j,...)[i])/(4*eps) +  ((g(theta+eps*e_i,...)[j] - g(theta-eps*e_i,...)[j])/(4*eps)))
     }
   }
   return(hess)
@@ -20,7 +20,7 @@ hessian1 <- function(theta, grad, eps) {
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#fscale=1,maxit=100,max.half=20){
   g <- grad(theta,...)
   if (is.null(hess)){
-    hess<-function(theta){hessian1(theta,grad,eps)}
+    hess<-function(theta,...){hessian1(theta,grad,eps,...)}
   }
   counter2<-0
   while (length(g[abs(g) > tol]) > 0) {
@@ -54,17 +54,19 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#
     g <- grad(theta,...)
   }
   
-  theta
+  
+  print(counter2)
+  return(theta)
 }
 
 #test case 1
-rb <- function(th,k=2) {
+rb <- function(th,k) {
   k*(th[2]-th[1]^2)^2 + (1-th[1])^2
 }
-gb <- function(th,k=2) {
+gb <- function(th,k) {
   c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
 }
-hb <- function(th,k=2) {
+hb <- function(th,k) {
   h <- matrix(0,2,2)
   h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
   h[2,2] <- 2*k
@@ -109,5 +111,4 @@ gll <- function(theta) {
   -c(sum(y1)/alpha - sum(ebt), ## -dl/dalpha
      sum(y1*t80) - alpha*sum(t80*ebt)) ## -dl/dbeta
 } ## gll
-
-newt(c(10,.1),nll,gll)
+newt(c(10,3),rb,gb,k=2)
