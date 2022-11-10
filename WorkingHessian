@@ -32,7 +32,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,max.half=20,eps=1e-6) {#
     while (inherits(try(chol(H), silent=TRUE), "try-error")) {
       #perturb the hessian if it isn't positive definite
       print('converting non-pos to pos')
-      H <- H + matrix(1,length(theta),length(theta))*multiple
+      print(norm(H, type = 'F'))
+      H <- H + diag(length(theta))*(abs(min(eigen(H)$values))+1)
       multiple<-multiple+10
     }
     #Need to find a way to get rid of the solve
@@ -111,4 +112,4 @@ gll <- function(theta) {
   -c(sum(y1)/alpha - sum(ebt), ## -dl/dalpha
      sum(y1*t80) - alpha*sum(t80*ebt)) ## -dl/dbeta
 } ## gll
-newt(c(10,3),rb,gb,k=2)
+newt(c(400,1),dummy,dummy_grad)
