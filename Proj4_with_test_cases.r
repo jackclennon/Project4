@@ -87,7 +87,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
        Hi=Hi)
 }
 
-#test case 1
+# Test case 1
 rb <- function(th,k) {
   k*(th[2]-th[1]^2)^2 + (1-th[1])^2
 }
