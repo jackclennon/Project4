@@ -33,7 +33,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   iterations<-0
   
   # breaks when there is convergence
-  while (length(g[abs(g) >= tol*(abs(func(theta))+fscale)]) > 0) { 
+  while (length(g[abs(g) >= tol*(abs(func(theta, ...))+fscale)]) > 0) { 
     
     # ends the algorithm if we exceed the maximum number of iterations maxit
     if (iterations > maxit)
