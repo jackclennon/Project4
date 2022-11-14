@@ -60,7 +60,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
     counter <- 0
     while(func(theta + delta,...) > func(theta,...) || is.infinite(func(theta, ...))) {
       if (counter >= max.half) {
-        warning("Step halving fails to reduce the objective function despite trying max.half step halvings")
+        stop("Step halving fails to reduce the objective function despite trying max.half step halvings")
       }
       
       #halves the step size
@@ -78,7 +78,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   }
   
   if (notPosDef) 
-    warning("Hessian not positive definite at minimum, Hi is the inverse of the nearest positive definite Hessian")
+    warning("Hessian is not positive definite at minimum, Hi is the inverse of the nearest positive definite Hessian")
   
   list(f=func(theta, ...),
        theta=theta,
@@ -87,7 +87,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
        Hi=Hi)
 }
 
-# Test case 1
+#test case 1
 rb <- function(th,k) {
   k*(th[2]-th[1]^2)^2 + (1-th[1])^2
 }
@@ -163,6 +163,30 @@ dummy_hess4<-function(theta){
   return(hessian_csd(dummy4,theta)) # Hessian for complex step derivatives (csd)
 }
 
+
+
+#Test Case 8
+dummy6<-function(theta){ # This is positive definite# Test Case 7
+dummy5<-function(theta){ # This is positive in-definite
+  x<-theta[1];y<-theta[2];z<-theta[3]
+  return(x^2*y^2*z^2+1)
+}
+dummy_grad5<-function(theta){
+  return(grad(dummy5,theta))
+}
+dummy_hess5<-function(theta){
+  return(hessian_csd(dummy5,theta)) # Hessian for complex step derivatives (csd)
+}
+  x<-theta[1];y<-theta[2];z<-theta[3]
+  return((x+y+z)^2-1)
+}
+dummy_grad6<-function(theta){
+  return(grad(dummy6,theta))
+}
+dummy_hess6<-function(theta){
+  return(hessian_csd(dummy6,theta)) # Hessian for complex step derivatives (csd)
+}
+
 findgradient<-function(theta){
   trig.exp <- expression((1.5-x+x*y)^2 + (2.25 - x + x*y^2)^2 + (2.625-x+x*y^3)^2)
   ( dxy <- deriv(trig.exp, c("x", "y")) )
@@ -187,4 +211,5 @@ gll <- function(theta) {
      sum(y1*t80) - alpha*sum(t80*ebt)) ## -dl/dbeta
 } ## gll
 
-newt(c(400,1),dummy2,dummy_grad2, maxit=500)
+newt(c(400,1,1),dummy5,dummy_grad5, maxit=500)
+ 
