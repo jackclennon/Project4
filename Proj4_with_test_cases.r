@@ -103,7 +103,7 @@ hb <- function(th,k) {
 }
 
 #Test case 2
-dummy0<-function(theta){
+dummy0<-function(theta){ # (3,0.5)
   x<-theta[1];y<-theta[2]
   return((1.5-x+x*y)^2 + (2.25 - x + x*y^2)^2 + (2.625-x+x*y^3)^2)
 }
@@ -128,7 +128,7 @@ dummy_hess1<-function(theta){
 }
 
 #Test Case 4
-dummy2<-function(theta){  
+dummy2<-function(theta){  # The Hessian contains non-finite values
   x<-theta[1];y<-theta[2]
   return((exp(x*y)-exp(-x*y))/2)
 }
@@ -140,7 +140,7 @@ dummy_hess2<-function(theta){
 }
 
 # Test Case 5
-dummy3<-function(theta){ # This is negative definite
+dummy3<-function(theta){ #  Hessian is not positive definite at minimum (negative-definite)
   x<-theta[1];y<-theta[2]
   return(-y-x^2+2*x-2)
 }
@@ -152,7 +152,7 @@ dummy_hess3<-function(theta){
 }
 
 # Test Case 6
-dummy4<-function(theta){ # This is positive in-definite
+dummy4<-function(theta){ # Iterations exceeded maxit 500 (positive in-definite)
   x<-theta[1];y<-theta[2]
   return(-y+2*x^2-x-5)
 }
@@ -164,7 +164,7 @@ dummy_hess4<-function(theta){
 }
 
 # Test Case 7
-dummy5<-function(theta){     ##Not Positive Definite
+dummy5<-function(theta){     # Hessian is not positive definite at minimum
   x<-theta[1];y<-theta[2];z<-theta[3]
   return(x^2*y^2*z^2+1)
 }
