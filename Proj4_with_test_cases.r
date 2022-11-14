@@ -1,21 +1,23 @@
 hessian <- function(theta, grad, eps,...) {
   g<-grad
   n<-length(theta)
-  hess<-matrix(nrow=n,ncol=n)
+  hess<-matrix(0, nrow=n,ncol=n)
   h<-rep(0, 2)
   h[1] <- eps
   h[2] <- eps
   for (i in 1:n){
-    for (j in 1:n){
+    for (j in 1:i){
       e_i=rep(0,n)
       e_i[i]=1
       e_j=rep(0,n)
       e_j[j]=1
       hess[i, j] = ((g(theta + eps*e_j,...)[i] - g(theta-eps*e_j,...)[i])/(4*eps) +  ((g(theta+eps*e_i,...)[j] - g(theta-eps*e_i,...)[j])/(4*eps)))
+      hess[j, i] = hess[i, j]
     }
   }
   return(hess)
 }
+
 
 newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=100, max.half=20,eps=1e-6) {#,max.half=20){
   g <- grad(theta,...)
