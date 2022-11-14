@@ -163,11 +163,8 @@ dummy_hess4<-function(theta){
   return(hessian_csd(dummy4,theta)) # Hessian for complex step derivatives (csd)
 }
 
-
-
-#Test Case 8
-dummy6<-function(theta){ # This is positive definite# Test Case 7
-dummy5<-function(theta){ # This is positive in-definite
+# Test Case 7
+dummy5<-function(theta){ 
   x<-theta[1];y<-theta[2];z<-theta[3]
   return(x^2*y^2*z^2+1)
 }
@@ -177,6 +174,9 @@ dummy_grad5<-function(theta){
 dummy_hess5<-function(theta){
   return(hessian_csd(dummy5,theta)) # Hessian for complex step derivatives (csd)
 }
+
+#Test Case 8
+dummy6<-function(theta){ 
   x<-theta[1];y<-theta[2];z<-theta[3]
   return((x+y+z)^2-1)
 }
