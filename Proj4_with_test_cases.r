@@ -176,7 +176,7 @@ dummy_hess5<-function(theta){
 }
 
 #Test Case 8
-dummy6<-function(theta){    # Fails after max.half iterations
+dummy6<-function(theta){    # Fails after max.half step halvings
   x<-theta[1];y<-theta[2];z<-theta[3]
   return((x+y+z)^2-1)
 }
