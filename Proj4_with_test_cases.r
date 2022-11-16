@@ -36,6 +36,7 @@ hessian <- function(theta, grad, eps, ...) {
       hess[j, i] = hess[i, j]
     }
   }
+  hess
 }
 
 newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=100, max.half=20,eps=1e-6) {
