@@ -1,25 +1,46 @@
-hessian <- function(theta, grad, eps,...) {
+hessian <- function(theta, grad, eps, ...) {
+  #function for calculating the Hessian
+  #takes theta, the variables of the function to find the Hessian of
+  #grad, the gradient of the function
+  #eps, a small number
+  #... extra parameters to pass to grad
+  
+  #start by putting grad into g to make it easier to see what's going on
   g<-grad
+  
+  #get the number of elements in theta
   n<-length(theta)
-  hess<-matrix(0, nrow=n,ncol=n)
-  h<-rep(0, 2)
-  h[1] <- eps
-  h[2] <- eps
+  
+  #create an empty nxn matrix where we'll put the Hessian
+  hess<-matrix(nrow=n,ncol=n)
+  
+  #loop over each row in the Hessian
   for (i in 1:n){
+    
+    #loop over each column up to the current row
+    #this makes the lower triangle of the Hessian
     for (j in 1:i){
+      #make the vector that will add a slight change to the ith element of theta
       e_i=rep(0,n)
       e_i[i]=1
+      
+      #make the vector that will add a slight change to the jth element of theta
       e_j=rep(0,n)
       e_j[j]=1
+      
+      #this is the equation for the element H_ij
       hess[i, j] = ((g(theta + eps*e_j,...)[i] - g(theta-eps*e_j,...)[i])/(4*eps) +  ((g(theta+eps*e_i,...)[j] - g(theta-eps*e_i,...)[j])/(4*eps)))
+      
+      #the Hessian is symmetric, so we can skip calculating the upper triangle
+      #and just use the transpose of the lower triangle for the upper triangle
       hess[j, i] = hess[i, j]
     }
   }
-  return(hess)
 }
 
-
-newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=100, max.half=20,eps=1e-6) {#,max.half=20){
+newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=100, max.half=20,eps=1e-6) {
+  #function for carrying out Newton's method on a function
+  
   g <- grad(theta,...)
   if (is.null(hess)){
     hess<-function(theta,...){hessian(theta,grad,eps,...)}
@@ -35,14 +56,13 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   iterations<-0
   
   # breaks when there is convergence
-  while (length(g[abs(g) >= tol*(abs(func(theta))+fscale)]) > 0) { 
+  while (length(g[abs(g) >= tol*(abs(func(theta, ...))+fscale)]) > 0) { 
     
     # ends the algorithm if we exceed the maximum number of iterations maxit
     if (iterations > maxit)
       stop("Iterations exceeded maxit ", maxit)
     
     #check if the hessian is positive definite. If it isn't, the we perturb it
-    multiple<-1
     H<-hess(theta,...)
     notPosDef <- FALSE
     while (inherits(try(chol(H), silent=TRUE), "try-error")) {
@@ -51,7 +71,6 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
         stop('The Hessian contains non-finite values')
       #perturb the hessian if it isn't positive definite
       H <- H + diag(length(theta))*(abs(min(eigen(H)$values))+1)
-      multiple<-multiple+10
     }
     # chol2inv(chol(H)) <-> solve(H) <-> H^-1 because H is positive definite
     Hi <- chol2inv(chol(H))
@@ -79,16 +98,20 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
     iterations<-iterations+1
   }
   
-  if (notPosDef) 
-    warning("Hessian is not positive definite at minimum, Hi is the inverse of the nearest positive definite Hessian")
+  H<-hess(theta,...)
+  Hi <- chol2inv(chol(H))
   
-  list(f=func(theta, ...),
-       theta=theta,
-       iter=iterations,
-       g=grad(theta, ...),
-       Hi=Hi)
+  if (notPosDef) {
+    warning("Hessian is not positive definite at minimum and thus the inverse cannot be computed")
+    Hi <- NULL
+  }
+  
+  return(list(f=func(theta, ...),
+              theta=theta,
+              iter=iterations-1,
+              g=grad(theta, ...),
+              Hi=Hi))
 }
-
 #test case 1
 rb <- function(th,k) {
   k*(th[2]-th[1]^2)^2 + (1-th[1])^2
