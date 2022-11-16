@@ -65,9 +65,8 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
     
     #check if the hessian is positive definite. If it isn't, the we perturb it
     H<-hess(theta,...)
-    notPosDef <- FALSE
+    
     while (inherits(try(chol(H), silent=TRUE), "try-error")) {
-      notPosDef <- TRUE
       if (all(is.finite(H))==FALSE)
         stop('The Hessian contains non-finite values')
       #perturb the hessian if it isn't positive definite
@@ -100,11 +99,12 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   }
   
   H<-hess(theta,...)
-  Hi <- chol2inv(chol(H))
   
-  if (notPosDef) {
+  if (inherits(try(chol(H), silent=TRUE), "try-error")) {
     warning("Hessian is not positive definite at minimum and thus the inverse cannot be computed")
     Hi <- NULL
+  } else {
+    Hi <- chol2inv(chol(H))
   }
   
   return(list(f=func(theta, ...),
