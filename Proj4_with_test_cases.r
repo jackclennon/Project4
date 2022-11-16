@@ -59,6 +59,8 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   # breaks when there is convergence
   while (length(g[abs(g) >= tol*(abs(func(theta, ...))+fscale)]) > 0) { 
     
+    iterations<-iterations+1
+    
     # ends the algorithm if we exceed the maximum number of iterations maxit
     if (iterations > maxit)
       stop("Iterations exceeded maxit ", maxit)
@@ -94,8 +96,6 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
     #update the value for theta
     theta <- theta + delta
     g <- grad(theta,...)
-    
-    iterations<-iterations+1
   }
   
   H<-hess(theta,...)
@@ -109,7 +109,7 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, maxit=10
   
   return(list(f=func(theta, ...),
               theta=theta,
-              iter=iterations-1,
+              iter=iterations,
               g=grad(theta, ...),
               Hi=Hi))
 }
