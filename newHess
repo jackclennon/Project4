@@ -1,0 +1,164 @@
+hessian <- function(theta, grad, eps, ...) {
+  g0 <- grad(theta, ...)
+  n <- length(theta)
+  hess <- matrix(nrow=n,ncol=n)
+  for (i in 1:length(theta)) {
+    theta1 <- theta
+    theta1[i] <- theta1[i] + eps
+    g1 <- grad(theta1, ...)
+    hess[i, ] <- (g1-g0)/eps
+  }
+  hess
+}
+
+
+# This function implements Newton's method for finding the minimum of a function
+# The paramters are:
+# theta - vector of initial values for the optimization parameters
+# func - The objective function that we need to minimize
+# grad - The gradient of func which
+# hess - The hessian matrix function that we created earlier.
+# tol - The convergence tolerance
+# fscale - a rough estimate of the magnitude of func near the optimum
+# maxit - The maximum number of iterations before giving up.
+# eps - the finite difference intervals to use when a Hessian function 
+# is not provided.
+newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1, 
+                 maxit=100, max.half=20,eps=1e-6) {
+  # The initial gradient of the function is computed using grad
+  g <- grad(theta,...)
+  
+  # Check if we have a hessian, if not we use the hessian function to find it
+  if (is.null(hess)){
+    hess<-function(theta, ...){hessian(theta, grad, eps, ...)}
+  }
+  
+  # From here on, we will be using the functions stop() and warning() wherever
+  # necessary. stop() stops the execution of the rest of the code with a
+  # error message while warning() only displays the message. So based on our 
+  # requirement, we will be placing these functions where we desire to check
+  # the execution progresses as desired.
+  
+  # If the objective function is not finite at initial theta, there is no point 
+  # in continuing and thus we stop execution with a message.
+  if(is.infinite(func(theta, ...)))
+    stop('The objective function is not finite at the initial theta')
+  
+  # If the gradient of the function is not finite we stop execution
+  if (all(is.finite(g))==FALSE)
+    stop('The gradient vector contains non-finite values at initial theta')
+  
+  # iterations is used to count how many times we iterate newton's method
+  iterations<-0
+  
+  # The while loop breaks when there is convergence.
+  while (length(g[abs(g) >= tol*(abs(func(theta, ...))+fscale)]) > 0) { 
+    
+    #count the iteration
+    iterations<-iterations+1
+    
+    # Check if we've exceeded the maximum number of iterations  
+    if (iterations > maxit)
+      # If we have iterated too many times we stop
+      stop("Iterations exceeded maxit ", maxit)
+    
+    # Next step is to check if the hessian is positive definite. If it isn't, 
+    # then we perturb it
+    H<-hess(theta,...)
+    
+    # a variable for the size of our perturbation
+    multiple<-eps
+    
+    # If the cholesky decomposition of a matrix fails, then it is not positive
+    # definite. And thus it needs to be peturbed until it is.
+    while (inherits(try(chol(H), silent=TRUE), "try-error")) {
+      # Check if the hessian has any non-finite values and if it does we 
+      # terminate with stop().
+      if (all(is.finite(H))==FALSE)
+        stop('The Hessian contains non-finite values')
+      # Perturb the hessian if it isn't positive definite
+      Frob<-norm(H,type='F')
+      if (Frob==0){Frob=1}
+      H <- H + diag(length(theta))*Frob*multiple
+      multiple<-multiple*10
+      
+    }
+    # chol2inv(chol(H)) <-> solve(H) <-> H^-1 because H is positive definite
+    Hi <- chol2inv(chol(H))
+    # Delta is calculated as H^-1*gradient(f) as follows:
+    delta <- -Hi %*% grad(theta,...)
+    
+    # step-halving
+    # we need to check that the function's value is actually being minimised.
+    # Thus we initialize a counter to count how many times delta is being halved.
+    # This is governed by a max.half condition.
+    counter <- 0
+    # "func(theta + delta,...) > func(theta,...)" is the condition that checks 
+    # whether the function is actually being minimized. At the same time,
+    # the function should not contain non-finite values. 
+    while(func(theta + delta,...) > func(theta,...)){
+      # If max.half step halvings are exceeded we terminate with stop().
+      step_v<-func(theta + delta,...)
+      if (is.na(step_v) || is.infinite(step_v) || is.nan(step_v)){
+        stop("Step halving leads to a non-finite objective function")
+      }
+      if (counter >= max.half) {
+        stop("Step halving fails to reduce the objective function despite 
+     trying max.half step halvings")
+      }
+      
+      # Now half the step size
+      delta <- delta/2
+      
+      # Count the number of step halvings
+      counter <- counter + 1
+    }
+    
+    # Update the value for theta
+    theta <- theta + delta
+    # Now calculate the gradient again
+    g <- grad(theta,...)
+  }
+  # Thus we calculate the hessian and eventually check whether it is positive
+  # definite.
+  H<-hess(theta,...)
+  # If 'H' is not positive definite , we return a warning and return the rest of 
+  # the values apart from the Hessian, that are:
+  #  The minimized function func
+  #  The optimium theta values (let's say "thetahat"), 
+  #  Number of iterations it took (iter) and 
+  #  value of gradient at thetahat (g).
+  if (inherits(try(chol(H), silent=TRUE), "try-error")) {
+    warning("Hessian is not positive definite at minimum and 
+        thus the inverse cannot be computed")
+    Hi <- NULL
+    return(list(f=func(theta, ...),
+                theta=theta,
+                iter=iterations,
+                g=grad(theta, ...)))
+  } else {
+    Hi <- chol2inv(chol(H))
+  }
+  # If 'H' is positive definite, we compute the inverse using 'chol2inv(chol(H))'
+  # and thus return inverse of Hessian, Hi as well.  
+  return(list(f=func(theta, ...),
+              theta=theta,
+              iter=iterations,
+              g=grad(theta, ...),
+              Hi=Hi))
+}
+
+#test case 1
+rb <- function(th,k) {
+  k*(th[2]-th[1]^2)^2 + (1-th[1])^2
+}
+gb <- function(th,k) {
+  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
+}
+hb <- function(th,k) {
+  h <- matrix(0,2,2)
+  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
+  h[2,2] <- 2*k
+  h[1,2] <- h[2,1] <- -4*k*l*th[1]
+  h
+}
