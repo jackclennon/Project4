@@ -1,71 +1,79 @@
 # Jack Lennon s2463109,Denis Zorba s2461643,Yeshwanth Zagabathuni s2319494
-# ...Paste the Github link here...
+# https://github.com/jackclennon/Project4
+
 # Contributions:
-# Yeshwanth: Modifications in newt() and hessian(), designing test cases 
-# and testing and comments
+
+# Yeshwanth: Modifications in newt() and hessian(), designing test cases, 
+# most of the warnings and errors and testing and comments
+
+#Jack: Contributed to newt() and hessian(), warnings and errors, comments,
+#and testing
+
+#Denis: newt() and hessian(), fixed bugs, warnings and errors, and testing.
+
 # Our objective in this project is to optimize a given function using newtons 
 # method. Newtons method is a numerical optimization method that begins with
 # assuming a set of possible values for a function f(theta). Iteratively it
 # proceeds to find an estimate of the optimal values of theta that minimize the
-# function 'f' using the gradient of the function, its hessian and thus delta 
-# and a few more paramters. But the algorithm also has to reach the optimum 
-# theta by going through some conditions such as limiting the number of 
-# iterations, limiting the number of times delta is halved, ensuring that the
-# gradient does not tend towards infinity and so on. 
+# function 'f' using the gradient of the function, its hessian, delta,
+# and a few more paramters. 
+# The algorithm also has to reach the optimum theta by going through 
+# some conditions such as limiting the number of iterations, limiting the 
+# number of times delta is halved, ensuring that the gradient does not tend 
+# towards infinity and so on. 
 
 
-# First we need to find the hessian of the function. The function has following 
-# parameters:
-# theta = the variables of the function to find the Hessian of grad
-# grad = the gradient of the function using eps 
-# eps = the finite difference intervals to use when a Hessian function is not 
-# provided.
-# ... are just extra parameters to pass to grad
+# This function uses finite differencing to find the Hessian of a function
+# The function has the following parameters:
+#   theta = the variables of the function to find the Hessian of grad
+#   grad = the gradient of the function using eps 
+#   eps = the finite difference intervals to use 
+#   ... is for extra parameters to pass to grad
 hessian <- function(theta, grad, eps, ...) {
   
   # Start by putting grad into g to make it easier to see what's going on
-  g<-grad
+  g <- grad
   
   # Get the number of elements in theta
-  n<-length(theta)
+  n <- length(theta)
   
   # Create an empty nxn matrix where we'll put the Hessian
-  hess<-matrix(nrow=n,ncol=n)
+  hess <- matrix(nrow=n,ncol=n)
   
   # Loop over each row in the Hessian
   for (i in 1:n){
     # Loop over each column in the current row
     # This makes the lower triangle of the Hessian
     for (j in 1:i){
-      # Here rep() is just a function that replicates the value 0 'n' times to
       # form a vector of size 'n' filled with zeros.
-      e_i<-rep(0,n)
+      e_i <- rep(0,n)
       # Make the vector that will add a slight change to the ith element of theta
-      e_i[i]<-1
+      e_i[i] <- 1
       
-      # Here rep() is just a function that replicates the value 0 'n' times to
       # form a vector of size 'n' filled with zeros.
-      e_j<-rep(0,n)
+      e_j <- rep(0,n)
       # Make the vector that will add a slight change to the jth element of theta
-      e_j[j]<-1
+      e_j[j] <- 1
       
-      # This is the equation for the element H_ij
+      # This is the finite differencing equation for the element H_ij
       hess[i, j] <- ((g(theta + eps*e_j,...)[i] - g(theta-eps*e_j,...)[i])/(4*eps) +  
                        ((g(theta+eps*e_i,...)[j] - g(theta-eps*e_i,...)[j])/(4*eps)))
       
       # Since, the Hessian is symmetric, so we can skip calculating the upper 
-      # triangle and just use the transpose of the lower triangle 
+      # triangle and just flip the elements in the diagonal
       # for the upper triangle.
       hess[j, i] <- hess[i, j]
     }
   }
-  # Finally we return the hessian.
+  
+  #return the hessian.
   hess
 }
 
 
-# Now that we do have the hessian, we can thus pass it to the Newton's 
-# optimization algorithm initialized in newt(). The paramters are as follows:
+# This function implements Newton's method for finding the minimum value
+# of a function with parameters theta
+# The paramters are as follows:
 # theta - vector of initial values for the optimization parameters
 # func - The objective function that we need to minimize
 # grad - The gradient of the function which is basically a set of parial 
