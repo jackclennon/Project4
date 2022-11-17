@@ -1,3 +1,27 @@
+# Jack Lennon s2463109,Denis Zorba s2461643,Yeshwanth Zagabathuni s2319494
+# https://github.com/jackclennon/Project4
+
+# Contributions:
+
+# Yeshwanth: Modifications in newt(), designing test cases, comments, warnings, 
+# errors and testing.
+
+#Jack: newt() and hessian(), warnings and errors, comments, and testing
+
+#Denis: newt() and hessian(), fixed bugs, warnings and errors, and testing.
+
+# Our objective in this project is to optimize a given function using newtons 
+# method. Newtons method is a numerical optimization method that begins with
+# assuming a set of possible values for a function f(theta). Iteratively it
+# proceeds to find an estimate of the optimal values of theta that minimize the
+# function 'f' using the gradient of the function, its hessian, delta,
+# and a few more paramters. 
+# The algorithm also has to reach the optimum theta by going through 
+# some conditions such as limiting the number of iterations, limiting the 
+# number of times delta is halved, ensuring that the gradient does not tend 
+# towards infinity and so on. 
+
+
 hessian <- function(theta, grad, eps, ...) {
   g0 <- grad(theta, ...)
   n <- length(theta)
@@ -8,6 +32,55 @@ hessian <- function(theta, grad, eps, ...) {
     g1 <- grad(theta1, ...)
     hess[i, ] <- (g1-g0)/eps
   }
+  print(hess)
+  hess
+}
+
+
+# This function uses finite differencing to find the Hessian of a function
+# The function has the following parameters:
+#   theta = the variables of the function to find the Hessian of grad
+#   grad = the gradient of the function using eps 
+#   eps = the finite difference intervals to use 
+#   ... is for extra parameters to pass to grad
+hessian <- function(theta, grad, eps, ...) {
+  
+  # Start by putting grad into g to make it easier to see what's going on
+  g <- grad
+  
+  # Get the number of elements in theta
+  n <- length(theta)
+  
+  # Create an empty nxn matrix where we'll put the Hessian
+  hess <- matrix(nrow=n,ncol=n)
+  
+  # Loop over each row in the Hessian
+  for (i in 1:n){
+    # Loop over each column in the current row
+    # This makes the lower triangle of the Hessian
+    for (j in 1:i){
+      # form a vector of size 'n' filled with zeros.
+      e_i <- rep(0,n)
+      # Make the vector that will add a slight change to the ith element of theta
+      e_i[i] <- 1
+      
+      # form a vector of size 'n' filled with zeros.
+      e_j <- rep(0,n)
+      # Make the vector that will add a slight change to the jth element of theta
+      e_j[j] <- 1
+      
+      # This is the finite differencing equation for the element H_ij
+      hess[i, j] <- ((g(theta + eps*e_j,...)[i] - g(theta-eps*e_j,...)[i])/(4*eps) +  
+                       ((g(theta+eps*e_i,...)[j] - g(theta-eps*e_i,...)[j])/(4*eps)))
+      
+      # Since, the Hessian is symmetric, so we can skip calculating the upper 
+      # triangle and just flip the elements in the diagonal
+      # for the upper triangle.
+      hess[j, i] <- hess[i, j]
+    }
+  }
+  
+  #return the hessian.
   hess
 }
 
@@ -76,38 +149,46 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1,
       # terminate with stop().
       if (all(is.finite(H))==FALSE)
         stop('The Hessian contains non-finite values')
-      # Perturb the hessian if it isn't positive definite
-      Frob<-norm(H,type='F')
-      if (Frob==0){Frob=1}
-      H <- H + diag(length(theta))*Frob*multiple
-      multiple<-multiple*10
       
+      # Finds the frobenius norm, which gets we use to do the perturbation
+      Frob<-norm(H,type='F')
+      
+      # Make sure that frob isn't wasting time 
+      if (Frob==0){Frob=1}
+      
+      # perturb the matrix
+      H <- H + diag(length(theta))*Frob*multiple
+      
+      #make the scale of the perturbation larger incase we need to do it again
+      multiple<-multiple*10
     }
+    
     # chol2inv(chol(H)) <-> solve(H) <-> H^-1 because H is positive definite
     Hi <- chol2inv(chol(H))
+    
     # Delta is calculated as H^-1*gradient(f) as follows:
     delta <- -Hi %*% grad(theta,...)
     
     # step-halving
-    # we need to check that the function's value is actually being minimised.
-    # Thus we initialize a counter to count how many times delta is being halved.
-    # This is governed by a max.half condition.
+    # A counter to make sure we don't step-halve too many times
     counter <- 0
-    # "func(theta + delta,...) > func(theta,...)" is the condition that checks 
-    # whether the function is actually being minimized. At the same time,
-    # the function should not contain non-finite values. 
-    while(func(theta + delta,...) > func(theta,...)){
-      # If max.half step halvings are exceeded we terminate with stop().
+    
+    # Check that the function's value is actually being minimised
+    while(func(theta + delta,...) > func(theta,...)) {
+      # Check that we don't have a non-finite number in our next step
       step_v<-func(theta + delta,...)
       if (is.na(step_v) || is.infinite(step_v) || is.nan(step_v)){
+        # if we do have a non-finite value we stop
         stop("Step halving leads to a non-finite objective function")
       }
+      
+      # If max.half step halvings are exceeded we terminate with stop().
       if (counter >= max.half) {
         stop("Step halving fails to reduce the objective function despite 
      trying max.half step halvings")
       }
       
-      # Now half the step size
+      # Half the step size
       delta <- delta/2
       
       # Count the number of step halvings
@@ -116,31 +197,33 @@ newt <- function(theta, func, grad, hess=NULL, ..., tol=1e-8, fscale=1,
     
     # Update the value for theta
     theta <- theta + delta
-    # Now calculate the gradient again
+    
+    # Calculate the gradient for the next loop
     g <- grad(theta,...)
   }
-  # Thus we calculate the hessian and eventually check whether it is positive
-  # definite.
+  
+  # Calculate the hessian and eventually check whether it is positive definite.
   H<-hess(theta,...)
+  
   # If 'H' is not positive definite , we return a warning and return the rest of 
   # the values apart from the Hessian, that are:
-  #  The minimized function func
-  #  The optimium theta values (let's say "thetahat"), 
-  #  Number of iterations it took (iter) and 
-  #  value of gradient at thetahat (g).
+  #  f - The value of func at the minimum
+  #  theta - The theta values that give the minimum, 
+  #  iter - Number of iterations it took and 
+  #  g - value of gradient at the minimumm
   if (inherits(try(chol(H), silent=TRUE), "try-error")) {
     warning("Hessian is not positive definite at minimum and 
         thus the inverse cannot be computed")
-    Hi <- NULL
     return(list(f=func(theta, ...),
                 theta=theta,
                 iter=iterations,
                 g=grad(theta, ...)))
-  } else {
-    Hi <- chol2inv(chol(H))
-  }
-  # If 'H' is positive definite, we compute the inverse using 'chol2inv(chol(H))'
-  # and thus return inverse of Hessian, Hi as well.  
+  } 
+  
+  # Calculate the inverse of the hessian at the minimum
+  Hi <- chol2inv(chol(H))
+    
+  # Here we also return the inverse of the hessian, Hi
   return(list(f=func(theta, ...),
               theta=theta,
               iter=iterations,
